@@ -1,0 +1,43 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'BRANCH',
+            choices: ['master', 'branch1', 'branch2'],
+            description: 'Select branch'
+        )
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: "${params.BRANCH}",
+                url: 'https://github.com/dasaratha7569/different-branch.git'
+            }
+        }
+
+        stage('Terraform Version') {
+            steps {
+                sh 'terraform --version'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('linux-server-project/terraform') {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('linux-server-project/terraform') {
+                    sh 'terraform plan'
+                }
+            }
+        }
+    }
+}
