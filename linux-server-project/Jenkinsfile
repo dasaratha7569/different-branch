@@ -1,2 +1,82 @@
+pipeline {
+    agent any
 
+    parameters {
+        choice(
+            name: 'BRANCH',
+            choices: ['branch1', 'branch2'],
+            description: 'Select Git Branch'
+        )
+    }
+
+    environment {
+        AWS_DEFAULT_REGION = 'ap-south-1'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: "${params.BRANCH}",
+                    url: 'https://github.com/dasaratha7569/different-branch.git'
+            }
+        }
+
+        stage('Terraform Version') {
+            steps {
+                sh 'terraform --version'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('linux-server-project/terraform') {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('linux-server-project/terraform') {
+                    sh 'terraform plan'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('linux-server-project/terraform') {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+
+        stage('Terraform Output') {
+            steps {
+                dir('linux-server-project/terraform') {
+                    sh 'terraform output'
+                }
+            }
+        }
+
+        stage('Run Ansible') {
+            steps {
+                dir('linux-server-project/ansible') {
+                    sh 'ansible-playbook -i inventory.ini site.yml'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Terraform and Ansible completed successfully'
+        }
+
+        failure {
+            echo 'Pipeline failed'
+        }
+    }
+}
 
